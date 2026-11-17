@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><title>KCL Studio</title>
+<link rel="stylesheet" href="/studio/studio.css"></head>
+<body>
+<header id="top">
+  <span class="brand">KCL Studio</span><span class="file" id="file">…</span>
+  <span class="sep"></span>
+  <button id="bSkel" aria-pressed="true" title="骨架：主体框、容器、线族、类型框、静区">骨架</button>
+  <button id="bFlow" aria-pressed="true" title="红色动线、入口、站点、出口">动线</button>
+  <button id="bGrid" aria-pressed="false" title="12 栏与三分线">网格</button>
+  <button id="bHeat" aria-pressed="false" title="九宫格墨量（需要 measure 结果）">热区</button>
+  <span class="sep"></span>
+  <span id="layers" title="最终层的显示开关"></span>
+  <span class="sep"></span>
+  <button id="bRef" aria-pressed="false" title="参考作品并排">参考</button>
+  <button id="bMeasure" title="用 Playwright 截图并做像素诊断">测量</button>
+  <button id="bShot" title="把当前画面截图到 spec 旁边的 .shot.png">截图</button>
+  <select id="zoom" title="缩放"><option value="fit">适配</option><option value="0.5">50%</option><option value="1">100%</option><option value="2">200%</option></select>
+  <button id="bPause" aria-pressed="false" title="暂停文件轮询">暂停</button>
+  <span class="live" id="live">connecting</span>
+</header>
+<main id="stage"><div id="stageInner">
+  <div id="plateWrap"></div>
+  <div id="refWrap"><div class="refs" id="refs"></div><img id="refBig" alt="" hidden></div>
+</div></main>
+<aside id="side">
+  <h2>Elements</h2><div id="elements"></div>
+  <h2>Inspector</h2><div id="inspector"><span style="color:var(--dim)">点选画布或列表中的元素；拖动移动，右下角把手缩放，方向键微调（Shift ×10）。</span></div>
+  <h2>Report</h2><div id="report">尚未测量。</div>
+  <div id="status">—</div>
+  <div class="kbd">Esc 取消选择 · Delete 删除元素 · Ctrl/⌘+Z 恢复上一版 · 文件改动自动刷新</div>
+</aside>
+<script type="module" src="/studio/studio.js"></script>
+</body></html>

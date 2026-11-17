@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kasidia's Concept Law"
+  short_description: "Compose graphic, art-directed pages in the plane-composition idiom: skeleton, signal color, reduced subjects, type as plane."
+  default_prompt: "Use $kasidia-concept-law to concept, sketch, build and verify this graphic page under KCL: state the tension, fill the composition spec in principle order with a flow, render the sketch and get it approved, then write the brief, process assets, build the layers from the spec, screenshot, overlay and review."

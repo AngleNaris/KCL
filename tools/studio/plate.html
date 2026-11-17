@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><title>KCL plate</title>
+<style>html,body{margin:0;padding:0;background:#fff}body{display:block;line-height:0}svg{display:block}</style></head>
+<body>
+<script type="module">
+import { renderAll, renderPlate, wireOverlay, normalizeSpec } from '/lib/kcl-render.mjs';
+const q = new URLSearchParams(location.search);
+const r = await fetch('/api/spec').then((x) => x.json());
+const spec = r.migrated || r.spec; const assets = {}; for (const [k, v] of Object.entries(r.assets)) if (v.w) assets[k] = { w: v.w, h: v.h };
+const norm = normalizeSpec(spec, { assets });
+const resolve = (s) => (r.assets[s] ? `${r.assets[s].url}?v=${r.assets[s].mtimeMs || 0}` : s);
+const layers = q.get('layers') ? q.get('layers').split(',') : null;
+const extra = q.get('wire') ? wireOverlay(norm, { assets, show: { grid: q.get('wire') === 'grid' } }) : '';
+document.body.innerHTML = renderPlate(norm, { assets, resolve, layers, extra, id: 'plate' });
+document.title = `KCL plate · ${r.path.split(/[\\/]/).pop()}`;
+await document.fonts?.ready; document.documentElement.dataset.ready = '1';
+</script>
+</body></html>

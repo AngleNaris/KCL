@@ -1,0 +1,486 @@
+{
+  "kcl": "spec-v2",
+  "title": "潮汐表 · 苍鹭 / Tide Table · Heron",
+  "page": "tide-heron.html",
+  "archetype": "Asymmetric Grid",
+  "canvas": {
+    "w": 1440,
+    "h": 900
+  },
+  "imagery": {
+    "tension": "A heron measured by a tide table. / 苍鹭被潮汐表测量。",
+    "subjectRegister": "Natural",
+    "apparatus": "tide curve rings, hour ticks, a 27° survey diagonal, a folio of coordinates",
+    "motifs": [
+      "heron",
+      "tide rings",
+      "moon phases"
+    ],
+    "fragments": [
+      "feathers shed along the exit path"
+    ],
+    "voice": [
+      "水退时，它仍站在原处。",
+      "THE TIDE LEAVES. THE BIRD DOES NOT."
+    ]
+  },
+  "principles": {
+    "hierarchy": {
+      "ranks": [
+        {
+          "id": "heron",
+          "role": "subject"
+        },
+        {
+          "id": "tide-plate",
+          "role": "apparatus"
+        },
+        {
+          "id": "feathers",
+          "role": "fragments"
+        }
+      ],
+      "dimensions": [
+        "size",
+        "solid/line"
+      ]
+    },
+    "balance": "diagonal",
+    "alignment": {
+      "datum": "diagonal",
+      "angle": 27,
+      "horizon": 0.62
+    },
+    "proximity": [
+      {
+        "group": "reading",
+        "members": [
+          "voice",
+          "folio"
+        ]
+      },
+      {
+        "group": "measured",
+        "members": [
+          "heron",
+          "rings",
+          "soft"
+        ]
+      }
+    ],
+    "repetition": [
+      {
+        "what": "feathers",
+        "count": 9,
+        "variation": "shrink away from the heron"
+      },
+      {
+        "what": "rhythm points",
+        "count": 7,
+        "variation": "ratio 1.45 along the diagonal"
+      }
+    ],
+    "contrast": [
+      "size: heron vs hour ticks",
+      "solid vs line: silhouette with a line ghost",
+      "hard vs soft: stars vs one ribbon"
+    ],
+    "whitespace": {
+      "target": 0.55,
+      "zone": "upper right",
+      "narrative": "the heron's legs are cut by the bottom edge"
+    }
+  },
+  "color": {
+    "mode": "Mono",
+    "paper": "#efede4",
+    "ink": "#141414",
+    "signal": "#0b7a63",
+    "reason": "viridian: wet, cold, unlike the warm paper; not the idiom's habitual blue",
+    "ground": "paper"
+  },
+  "elements": [
+    {
+      "kind": "container",
+      "shape": "circle",
+      "cx": 560,
+      "cy": 470,
+      "r": 300,
+      "label": "容器 implied ring",
+      "weight": "line",
+      "fill": "outline",
+      "ink": "fg"
+    },
+    {
+      "kind": "bar",
+      "x": 760,
+      "y": 540,
+      "w": 680,
+      "h": 26,
+      "weight": "bar",
+      "fill": "solid",
+      "ink": "fg"
+    },
+    {
+      "kind": "subject",
+      "id": "heron",
+      "label": "苍鹭 heron",
+      "rank": 1,
+      "levels": [
+        {
+          "mode": "silhouette"
+        },
+        {
+          "mode": "line"
+        }
+      ],
+      "box": {
+        "x": 300,
+        "y": 120,
+        "w": 520,
+        "h": 900
+      },
+      "bleed": [
+        "bottom"
+      ],
+      "fit": "contain",
+      "render": "reduced"
+    },
+    {
+      "kind": "subject",
+      "id": "tide-plate",
+      "label": "潮汐表 tide plate",
+      "rank": 2,
+      "levels": [
+        {
+          "mode": "line"
+        }
+      ],
+      "box": {
+        "x": 1040,
+        "y": 150,
+        "w": 300,
+        "h": 180
+      },
+      "fit": "contain",
+      "render": "reduced"
+    },
+    {
+      "kind": "lines",
+      "angle": 27,
+      "count": 2,
+      "perp": 1,
+      "through": [
+        560,
+        470
+      ],
+      "weight": "hairline",
+      "fill": "outline",
+      "ink": "fg"
+    },
+    {
+      "kind": "horizon",
+      "y": 0.62,
+      "weight": "hairline",
+      "fill": "outline",
+      "ink": "fg"
+    },
+    {
+      "kind": "rings",
+      "cx": 560,
+      "cy": 470,
+      "radii": [
+        330,
+        420
+      ],
+      "dash": true,
+      "weight": "hairline",
+      "fill": "outline",
+      "ink": "fg"
+    },
+    {
+      "kind": "rhythm",
+      "path": [
+        [
+          120,
+          820
+        ],
+        [
+          1320,
+          160
+        ]
+      ],
+      "count": 7,
+      "ratio": 1.45,
+      "start": 3.5,
+      "weight": "line",
+      "fill": "solid",
+      "ink": "fg"
+    },
+    {
+      "kind": "trail",
+      "id": "feathers",
+      "label": "羽毛",
+      "path": [
+        [
+          1200,
+          360
+        ],
+        [
+          1280,
+          560
+        ],
+        [
+          1330,
+          720
+        ],
+        [
+          1400,
+          880
+        ]
+      ],
+      "count": 9,
+      "size": [
+        8,
+        30
+      ],
+      "taper": "away",
+      "spread": 70,
+      "weight": "line",
+      "fill": "solid",
+      "ink": "fg"
+    },
+    {
+      "kind": "mark",
+      "shape": "star",
+      "x": 80,
+      "y": 80,
+      "size": 18,
+      "weight": "line",
+      "fill": "solid",
+      "ink": "signal"
+    },
+    {
+      "kind": "mark",
+      "shape": "star",
+      "x": 1360,
+      "y": 80,
+      "size": 12,
+      "weight": "line",
+      "fill": "solid",
+      "ink": "signal"
+    },
+    {
+      "kind": "mark",
+      "shape": "star",
+      "x": 980,
+      "y": 250,
+      "size": 22,
+      "weight": "line",
+      "fill": "solid",
+      "ink": "signal"
+    },
+    {
+      "kind": "mark",
+      "shape": "dot",
+      "x": 430,
+      "y": 700,
+      "size": 10,
+      "weight": "line",
+      "fill": "solid",
+      "ink": "signal"
+    },
+    {
+      "kind": "mark",
+      "shape": "star",
+      "x": 1360,
+      "y": 840,
+      "size": 14,
+      "weight": "line",
+      "fill": "solid",
+      "ink": "signal"
+    },
+    {
+      "kind": "soft",
+      "x": 640,
+      "y": 410,
+      "w": 260,
+      "h": 56,
+      "angle": -27,
+      "weight": "band",
+      "fill": "solid",
+      "ink": "signal"
+    },
+    {
+      "kind": "type",
+      "role": "plane",
+      "text": "ARDEA",
+      "orientation": "vertical",
+      "box": {
+        "x": 1180,
+        "y": 60,
+        "w": 170,
+        "h": 780
+      },
+      "weight": "line",
+      "fill": "solid",
+      "ink": "fg"
+    },
+    {
+      "kind": "type",
+      "role": "mark",
+      "text": "Tide table · 2026 · folio 03",
+      "box": {
+        "x": 60,
+        "y": 46,
+        "w": 320,
+        "h": 18
+      },
+      "weight": "line",
+      "fill": "solid",
+      "ink": "fg"
+    },
+    {
+      "kind": "type",
+      "role": "mark",
+      "text": "33°52′S 151°12′E",
+      "box": {
+        "x": 1060,
+        "y": 846,
+        "w": 300,
+        "h": 18
+      },
+      "weight": "line",
+      "fill": "solid",
+      "ink": "fg"
+    },
+    {
+      "kind": "type",
+      "role": "voice",
+      "text": [
+        "水退时，它仍站在原处。",
+        "THE TIDE LEAVES. THE BIRD DOES NOT."
+      ],
+      "box": {
+        "x": 820,
+        "y": 600,
+        "w": 420,
+        "h": 70
+      },
+      "weight": "line",
+      "fill": "solid",
+      "ink": "fg"
+    },
+    {
+      "kind": "quiet",
+      "box": {
+        "x": 800,
+        "y": 580,
+        "w": 470,
+        "h": 110
+      }
+    }
+  ],
+  "flow": {
+    "type": "对角回旋 diagonal loop",
+    "entry": [
+      60,
+      110
+    ],
+    "path": [
+      [
+        300,
+        210
+      ],
+      [
+        520,
+        300
+      ],
+      [
+        600,
+        470
+      ],
+      [
+        560,
+        640
+      ],
+      [
+        800,
+        640
+      ],
+      [
+        1100,
+        560
+      ],
+      [
+        1180,
+        300
+      ],
+      [
+        1320,
+        520
+      ]
+    ],
+    "exit": [
+      1400,
+      880
+    ],
+    "stations": [
+      {
+        "at": [
+          520,
+          300
+        ],
+        "label": "heron head"
+      },
+      {
+        "at": [
+          560,
+          470
+        ],
+        "label": "ring centre + ribbon"
+      },
+      {
+        "at": [
+          860,
+          640
+        ],
+        "label": "voice"
+      },
+      {
+        "at": [
+          1180,
+          300
+        ],
+        "label": "tide plate"
+      }
+    ],
+    "secondary": {
+      "path": [
+        [
+          1265,
+          90
+        ],
+        [
+          1265,
+          820
+        ]
+      ]
+    }
+  },
+  "gates": {
+    "imagery": {
+      "status": "approved",
+      "date": "2026-11-15",
+      "by": "example"
+    },
+    "sketch": {
+      "status": "approved",
+      "date": "2026-11-15",
+      "file": "tide-heron.sketch.svg"
+    }
+  },
+  "finish": {
+    "overlay": "none"
+  }
+}

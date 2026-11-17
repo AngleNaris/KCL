@@ -1,0 +1,21 @@
+# Local-only working material. Never published.
+dev_*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local run output
+output/
+*.log
