@@ -4,7 +4,7 @@
 Pipeline, in order:
   load -> rotate/flip -> crop -> cutout -> trim/pad -> adjust -> scale -> reduce (mode) -> colorize/export
 
-Modes: threshold | dither | halftone | line | silhouette | negative | duotone | posterize
+Modes: preserve | threshold | dither | halftone | line | silhouette | negative | duotone | posterize
 Cutout: flood (connected background from the corners) | color (every pixel near --key) | luma (light or dark pixels)
 Run with `python3 -I`. Requires Pillow only.
 
@@ -22,7 +22,7 @@ import argparse
 import sys
 
 try:
-    from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
+    from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 except ImportError:  # pragma: no cover
     sys.stderr.write("Pillow is required: pip install Pillow\n")
     sys.exit(2)
@@ -119,7 +119,7 @@ def cutout(img, a):
         mask = largest_component(mask)
     mask = mask.point(lambda p: 255 if p >= 128 else 0, mode='L')  # hard edge (MAT-3)
     existing = img.getchannel('A')
-    combined = Image.composite(mask, Image.new('L', (w, h), 0), existing.point(lambda p: 255 if p > 32 else 0, mode='L'))
+    combined = ImageChops.multiply(mask, existing) if a.alpha == 'preserve' else Image.composite(mask, Image.new('L', (w, h), 0), existing.point(lambda p: 255 if p > 32 else 0, mode='L'))
     out = img.copy()
     out.putalpha(combined)
     return out
@@ -164,7 +164,7 @@ def largest_component(mask):
 
 def trim(img, a):
     if a.trim:
-        bbox = img.getchannel('A').point(lambda p: 255 if p > 32 else 0).getbbox()
+        bbox = img.getchannel('A').point(lambda p: 255 if p > (0 if a.alpha == 'preserve' else 32) else 0).getbbox()
         if bbox:
             img = img.crop(bbox)
     if a.pad:
@@ -281,7 +281,7 @@ MODES = {
 }
 
 
-def colorize(gray, ink, paper, alpha, knockout):
+def colorize(gray, ink, paper, alpha, knockout, preserve_alpha=False):
     """Map 0..255 gray to ink..paper. Knockout makes paper transparent; the cutout alpha always applies."""
     has_alpha = alpha.getextrema()[0] < 255
     rgb = ImageOps.colorize(gray, black=ink, white=paper)
@@ -289,7 +289,7 @@ def colorize(gray, ink, paper, alpha, knockout):
         return rgb
     a = gray.point(lambda p: 255 - p, mode='L') if knockout else Image.new('L', gray.size, 255)
     if has_alpha:
-        a = Image.composite(a, Image.new('L', a.size, 0), subject_mask(alpha))
+        a = ImageChops.multiply(a, alpha) if preserve_alpha else Image.composite(a, Image.new('L', a.size, 0), subject_mask(alpha))
     out = Image.new('RGBA', gray.size, ink + (255,)) if knockout else rgb.convert('RGBA')
     out.putalpha(a)
     return out
@@ -304,6 +304,7 @@ def main():
     g.add_argument('--flip', choices=['h', 'v'])
     g.add_argument('--crop', help='x,y,w,h in px or %% (e.g. 10%%,0,50%%,100%%)')
     c = p.add_argument_group('cutout')
+    c.add_argument('--alpha', choices=['auto', 'preserve', 'hard'], default='auto', help='existing alpha policy: auto preserves for preserve mode, hard for reductions')
     c.add_argument('--cutout', choices=['flood', 'color', 'luma'])
     c.add_argument('--key', help='color #hex for --cutout color; "light" or "dark" for --cutout luma')
     c.add_argument('--tol', type=int, default=40, help='tolerance 0..255')
@@ -320,7 +321,7 @@ def main():
     t.add_argument('--scale', type=float, default=1.0)
     t.add_argument('--max', type=int, default=0, help='limit the long edge in px')
     r = p.add_argument_group('reduction')
-    r.add_argument('--mode', choices=sorted(MODES), default='threshold')
+    r.add_argument('--mode', choices=sorted([*MODES, 'preserve']), default='threshold')
     r.add_argument('--level', type=float, default=0.5, help='cut point 0..1 for threshold/negative/silhouette/line')
     r.add_argument('--cell', type=int, default=6, help='halftone cell size in px')
     r.add_argument('--stagger', action='store_true', help='stagger halftone rows')
@@ -331,6 +332,11 @@ def main():
     r.add_argument('--paper', default='#ffffff')
     r.add_argument('--knockout', action='store_true', help='make paper transparent (ink-on-alpha PNG)')
     a = p.parse_args()
+    if a.mode == 'preserve' and a.knockout:
+        p.error('--knockout requires a reduction mode; preserve keeps original RGBA')
+    hard_alpha_explicit = a.alpha == 'hard'
+    if a.alpha == 'auto':
+        a.alpha = 'preserve' if a.mode == 'preserve' else 'hard'
 
     img = load(a.input)
     img = geometry(img, a)
@@ -338,9 +344,14 @@ def main():
     img = trim(img, a)
     img = adjust(img, a)
     img = scale(img, a)
-    gray, alpha = luminance(img)
-    reduced = MODES[a.mode](gray, alpha, a)
-    out = colorize(reduced, hex_rgb(a.ink), hex_rgb(a.paper), alpha, a.knockout)
+    if a.mode == 'preserve':
+        out = img
+    else:
+        gray, alpha = luminance(img)
+        reduced = MODES[a.mode](gray, alpha, a)
+        out = colorize(reduced, hex_rgb(a.ink), hex_rgb(a.paper), alpha, a.knockout, preserve_alpha=a.alpha == 'preserve')
+    if hard_alpha_explicit and out.mode == 'RGBA':
+        out.putalpha(out.getchannel('A').point(lambda p: 255 if p > 32 else 0, mode='L'))
     out.save(a.output, 'PNG')
     opaque = sum(1 for v in out.getchannel('A').getdata() if v > 0) if out.mode == 'RGBA' else out.width * out.height
     print(f"{a.mode}: {out.width}x{out.height}, opaque {opaque / (out.width * out.height):.1%} -> {a.output}")

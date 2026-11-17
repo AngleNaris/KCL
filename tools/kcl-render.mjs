@@ -8,6 +8,13 @@
 export const SPEC_V1 = 'spec-v1';
 export const SPEC_V2 = 'spec-v2';
 
+// Missing mode preserves the historical diagnostic profile; new work explicitly selects its mode.
+export function compositionMode(spec) {
+  const mode = spec.artDirection?.mode ?? 'reduced';
+  if (!['hybrid', 'reduced'].includes(mode)) throw new Error(`unknown artDirection.mode: ${mode}`);
+  return mode;
+}
+
 // ---------- the ladders (SKL-14, GOV-3 defaults) ----------
 // Weight classes in canvas px at a 900px short side; scaled by min(W,H)/900. Nothing between the rungs.
 export const LADDER = {
@@ -22,7 +29,7 @@ export const LADDER = {
 };
 
 export const LAYER_ORDER = ['ground', 'plane', 'typePlane', 'subject', 'system', 'fragment', 'signal', 'type', 'overlay', 'quiet'];
-const KIND_LAYER = { system: 'system', field: 'plane', sweep: 'plane', ticks: 'system', arc: 'system', glyphs: 'fragment', blob: 'signal', ribbon: 'signal', tag: 'type', grid: 'system', bar: 'plane', block: 'plane', frame: 'plane', container: 'plane', subject: 'subject', lines: 'system', line: 'system', horizon: 'system', rings: 'system', radial: 'system', orbit: 'system', rhythm: 'system', trail: 'fragment', mark: 'signal', soft: 'signal', rule: 'signal', type: 'type', quiet: 'quiet' };
+const KIND_LAYER = { material: 'plane', system: 'system', field: 'plane', sweep: 'plane', ticks: 'system', arc: 'system', glyphs: 'fragment', blob: 'signal', ribbon: 'signal', tag: 'type', grid: 'system', bar: 'plane', block: 'plane', frame: 'plane', container: 'plane', subject: 'subject', lines: 'system', line: 'system', horizon: 'system', rings: 'system', radial: 'system', orbit: 'system', rhythm: 'system', trail: 'fragment', mark: 'signal', soft: 'signal', rule: 'signal', type: 'type', quiet: 'quiet' };
 export function layerOf(el) { if (el.layer) return el.layer; if (el.kind === 'type' && (el.role || 'voice') === 'plane') return 'typePlane'; return KIND_LAYER[el.kind] || 'system'; }
 
 // Default weight / fill / ink per kind. `fg` is the foreground role (ink on a paper ground, paper on an ink ground).
@@ -247,6 +254,7 @@ export function migrateSpec(input) {
 // Fill defaults and resolve anchors / along / through into concrete coordinates. Returns a new spec.
 export function normalizeSpec(input, opts = {}) {
   const spec = migrateSpec(input);
+  compositionMode(spec);
   const { w: W, h: H } = spec.canvas; const assets = opts.assets || {};
   const subjects = Object.fromEntries(spec.elements.filter((e) => e.kind === 'subject').map((e) => [e.id, e]));
   const assetOf = (sub) => { const main = (sub.levels || []).find((l) => l.src) || {}; return assets[main.src] || sub.assetSize || null; };
@@ -259,6 +267,17 @@ export function normalizeSpec(input, opts = {}) {
   const pointOf = (v) => (Array.isArray(v) ? v : typeof v === 'string' ? anchorPoint({ to: v.split('.')[0], at: v.split('.').slice(1).join('.') || undefined }) : v && v.to ? anchorPoint(v) : null);
   spec.elements = spec.elements.map((raw) => {
     const el = { ...raw }; const d = KIND_DEFAULTS[el.kind] || {};
+    if (el.layer && !LAYER_ORDER.includes(el.layer)) throw new Error(`invalid layer: ${el.layer}`);
+    if (el.kind === 'material') {
+      if (el.layer === 'quiet') throw new Error('quiet is a guide layer, not a material output layer');
+      const b = el.box;
+      if (!b || ![b.x, b.y, b.w, b.h].every(Number.isFinite) || b.w <= 0 || b.h <= 0) throw new Error(`material ${el.id || ''} requires a finite, positive box`);
+      if (el.fit && !['contain', 'cover', 'stretch'].includes(el.fit)) throw new Error(`invalid material fit: ${el.fit}`);
+      if (el.align && (!Array.isArray(el.align) || el.align.length !== 2 || !el.align.every(v => [0, 0.5, 1].includes(v)))) throw new Error('material align uses 0, 0.5 or 1 on each axis');
+      if (el.opacity !== undefined && (!Number.isFinite(el.opacity) || el.opacity < 0 || el.opacity > 1)) throw new Error('material opacity must be between 0 and 1');
+      if (el.rotate !== undefined && !Number.isFinite(el.rotate)) throw new Error('material rotate must be finite');
+      if (el.blend && !['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'difference', 'exclusion', 'color-burn', 'color-dodge', 'hard-light', 'soft-light', 'hue', 'saturation', 'color', 'luminosity'].includes(el.blend)) throw new Error(`invalid material blend: ${el.blend}`);
+    }
     if (el.kind !== 'subject' && el.kind !== 'quiet') { el.weight = el.weight || d.weight; el.fill = el.fill || d.fill; el.ink = el.ink || d.ink; }
     // SKL-18 kinship: angles and tilts may name the plate's axis; a line may be born radial or tangent to a centre.
     const AXIS = spec.axis ?? spec.principles?.alignment?.angle ?? 27;
@@ -342,7 +361,22 @@ export function renderPlate(input, opts = {}) {
   spec.elements.forEach((el, i) => {
     const kind = el.kind; const layer = layerOf(el); const col = colorOf(el.ink, pal); const op = opacityOf(el);
     const solid = el.fill === 'solid';
-    if (kind === 'bar') push(layer, el, i, `<rect x="${f(el.x)}" y="${f(el.y)}" width="${f(el.w)}" height="${f(el.h)}" fill="${col}" opacity="${op}"${clipFor(el)}/>`);
+    if (kind === 'material') {
+      const b = el.box;
+      if (!el.src) {
+        push(layer, el, i, `<rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" fill="none" stroke="${col}" stroke-dasharray="8 5"/><text x="${f(b.x + 8)}" y="${f(b.y + 20)}" font-family="${fontStack('mono')}" font-size="14" fill="${col}">${esc(el.label || el.id || 'material')} · asset pending</text>`);
+      } else {
+        const [ax, ay] = el.align || [0.5, 0.5]; const names = { 0: 'Min', 0.5: 'Mid', 1: 'Max' };
+        const aspect = el.fit === 'stretch' ? 'none' : `x${names[ax]}Y${names[ay]} ${el.fit === 'cover' ? 'slice' : 'meet'}`;
+        const cid = nid('material-box'); defs.push(`<clipPath id="${cid}"><rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"/></clipPath>`);
+        const tint = el.tint ? ` filter="url(#${tintFilter(colorOf(el.tint, pal))})"` : '';
+        const turn = el.rotate ? ` transform="rotate(${f(el.rotate)} ${f(b.x + b.w / 2)} ${f(b.y + b.h / 2)})"` : '';
+        const blend = el.blend ? ` style="mix-blend-mode:${el.blend}"` : '';
+        const img = `<image href="${esc(resolve(el.src))}" x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" preserveAspectRatio="${aspect}"${tint}/>`;
+        // External clip is in canvas space; box clipping and rotation belong to the asset.
+        push(layer, el, i, `<g opacity="${el.opacity ?? 1}"${blend}${clipFor(el)}><g${turn}><g clip-path="url(#${cid})">${img}</g></g></g>`);
+      }
+    } else if (kind === 'bar') push(layer, el, i, `<rect x="${f(el.x)}" y="${f(el.y)}" width="${f(el.w)}" height="${f(el.h)}" fill="${col}" opacity="${op}"${clipFor(el)}/>`);
     else if (kind === 'block') push(layer, el, i, `<rect x="${f(el.x)}" y="${f(el.y)}" width="${f(el.w)}" height="${f(el.h)}" fill="${solid || el.fill === 'ghost' ? col : 'none'}" opacity="${op}" ${solid || el.fill === 'ghost' ? '' : stroke(el, col)}${clipFor(el)}/>`);
     else if (kind === 'frame') push(layer, el, i, `<rect x="${f(el.x)}" y="${f(el.y)}" width="${f(el.w)}" height="${f(el.h)}" fill="none" ${stroke(el, col)} opacity="${op}"${dash(el)}/>`);
     else if (kind === 'container') {
@@ -559,7 +593,7 @@ export function wireOverlay(input, opts = {}) {
       else if (k === 'type' && show.boxes) { const b = el.box; out.push(`<rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" fill="none" stroke="${C.wire}" stroke-width="1" stroke-dasharray="${(el.role || 'voice') === 'plane' ? '10 6' : '4 4'}"/>`); }
       else if (k === 'quiet') { const b = el.box; out.push(`<rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" rx="6" fill="${C.quiet}" fill-opacity="0.08" stroke="${C.quiet}" stroke-dasharray="8 5"/>`); }
       else if (k === 'trail' || k === 'rhythm' || k === 'glyphs' || k === 'sweep' || k === 'ribbon') out.push(`<path d="${smoothPath(el.path)}" fill="none" stroke="${C.wire}" stroke-width="1" stroke-dasharray="2 4" opacity="0.8"/>`);
-      else if (k === 'field' || k === 'grid' || k === 'blob' || k === 'arc' || k === 'ticks') { const b = elementBox(el, W, H); out.push(`<rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" fill="none" stroke="${C.wire}" stroke-width="1" stroke-dasharray="6 4" opacity="0.7"/>`); }
+      else if (k === 'material' || k === 'field' || k === 'grid' || k === 'blob' || k === 'arc' || k === 'ticks') { const b = elementBox(el, W, H); out.push(`<rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" fill="none" stroke="${C.wire}" stroke-width="1" stroke-dasharray="6 4" opacity="0.7"/>`); }
     }
   }
   const flow = spec.flow;
@@ -576,8 +610,21 @@ export function wireOverlay(input, opts = {}) {
 // ---------- structural checks beyond sketch.mjs check (SKL-14, COL-6, MAT-7, SER-1, TEX-2) ----------
 export function checkStructure(input, opts = {}) {
   const spec = input.__W ? input : normalizeSpec(input, opts);
-  const { w: W, h: H } = spec.canvas; const S = Math.min(W, H); const warn = []; const info = {};
-  const apparatus = spec.elements.filter((e) => ['plane', 'system', 'signal'].includes(layerOf(e)) && e.kind !== 'soft');
+  const { w: W, h: H } = spec.canvas; const S = Math.min(W, H); const warn = []; const info = { mode: compositionMode(spec) };
+  const ids = new Set();
+  for (const el of spec.elements) {
+    if (el.id && ids.has(el.id)) warn.push(`GOV-7 duplicate element id: ${el.id}`);
+    if (el.id) ids.add(el.id);
+    if (el.kind === 'material' && !el.src) warn.push(`MAT-8 material ${el.id || el.label || ''}: asset pending`);
+    if (el.clip && !spec.elements.some(e => e.id === el.clip)) warn.push(`SKL-1 missing clip target: ${el.clip}`);
+  }
+  info.materials = spec.elements.filter(e => e.kind === 'material').map(e => ({ id: e.id, src: e.src || null, layer: layerOf(e) }));
+  if (info.mode === 'hybrid') {
+    // Geometric/style quotas cannot evaluate drawn material. Keep actionable structural diagnostics.
+    if (spec.series && !spec.series.variesBy?.length) warn.push('SER-1 系列作品未声明本张与其它张的区别');
+    return { ...info, weightClasses: [], solidPlane: null, signalCarriers: [], warnings: warn };
+  }
+  const apparatus = spec.elements.filter((e) => ['plane', 'system', 'signal'].includes(layerOf(e)) && e.kind !== 'soft' && e.kind !== 'material');
   const classes = new Set(apparatus.map((e) => (e.fill === 'ghost' ? `${e.weight}/ghost` : e.weight)));
   info.weightClasses = [...classes];
   if (classes.size < 3) warn.push(`SKL-14 装置只有 ${classes.size} 个重量档（${[...classes].join(', ') || '无'}），至少要三档`);

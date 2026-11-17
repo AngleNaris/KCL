@@ -1,28 +1,18 @@
-# KCL motion (动)
+# KCL motion
 
-Motion in KCL is a set of infinite loops that keep a composition alive without ever changing it. Nothing enters, nothing leaves, nothing lands somewhere else. A page paused at any instant must still pass [review.md](review.md). Rules are in the MOT section of [grammar.md](grammar.md); this file is the vocabulary and the recipes.
+Static work is complete. Add motion only when it contributes a specific observation, reveal or narrative relation. The bundled plate renderer outputs static SVG; implement time/interaction in the surrounding web layer. Do not describe a Motion Score as an engine feature that already exists.
 
-## Principles
+## Motion Score
 
-- **Loop, not entrance.** Every moving element has a steady state and returns to it. One settle animation at load is allowed (construction lines drawing in); everything else loops forever.
-- **Three tempos.** *Glacial*: rotation at 120–360s per revolution, drift at 40–90s per cycle. *Slow*: breathing and oscillation at 7–20s. *Quick*: twinkle, flicker, reseed at 0.6–4s. A stage uses at most one quick loop.
-- **Budget of three.** At most three moving systems per stage or band, not counting the overlay. The subject moves last and least; marks and voice type never move.
-- **Desynchronize.** Give coexisting loops durations that are not simple multiples (37s, 53s, 71s) and negative `animation-delay` offsets so they never align or visibly restart together.
-- **Small ranges.** Drift within 1–2% of the stage, breathe within 3–6% of scale, oscillate within 2–6px. A loop that moves an element across the composition is a layout change, not motion.
-- **Transform and opacity only.** No animated layout, color, blur or filter on large elements. SVG attributes that cannot be reached from CSS (grain `seed`, `stroke-dashoffset` on some engines) use SMIL `<animate>`.
-- **Reduced motion.** Under `prefers-reduced-motion: reduce`, pause every loop in its steady state; the composition is complete without motion.
+Record purpose, affected layers, trigger (ambient/time/scroll/input), start/end or loop duration, transform origin/path, range, occlusion, text protection and reduced-motion state. Start with one meaningful motion: an exact orbital layer, staged ink impression, a masked diagram reveal, or ordered specimen states. Do not float every image.
 
-## What may move, by layer
+Keep related material and exact geometry aligned. Split a generated assembly only where independently moving parts are needed. A raster ornament can rotate or reveal behind a vector mask; it need not be redrawn as primitive SVG just to move.
 
-| Layer | Loops | Tempo |
-| --- | --- | --- |
-| Ground | nothing | |
-| Plane | nothing; bars, frames and containers are the fixed order | |
-| Subject | one float (translate ≤ 1.5%) or a slow rotation if the subject is radial; a line ghost may oscillate its offset | glacial / slow |
-| System | rings rotate; radial bursts breathe; construction lines march their dash; rhythm points drift along their path or pulse in sequence; flocks drift; contours ripple by staggered scale; orbits wobble | glacial / slow |
-| Signal | ribbon flows (dash offset on its hard core); chromatic split oscillates; stars twinkle | slow / quick |
-| Type | plane type drifts or breathes along its stretch axis, very slowly; mark and voice type never | glacial |
-| Overlay | grain reseeds; scanlines roll; dot screen never | quick / slow |
+Prefer transform/opacity and inexpensive masks. Test expensive texture/filter changes at actual size. A useful starting budget is three moving systems, not a requirement or universal ceiling. Ambient loops can have differing periods; deliberate sequences may synchronize. Avoid incidental bounce, flicker and unmotivated drift.
+
+Provide a complete stable reduced-motion frame. CSS pause rules do not stop JavaScript or SMIL: explicitly disable/pause those mechanisms as well. Test the fallback. Inspect representative extremes and transitions, not only two nearby frames.
+
+The following recipes are optional building blocks for restrained ambient motion; choose only those that serve the Score.
 
 ## Recipes
 
@@ -112,4 +102,4 @@ Drift along a path for rhythm points (modern engines):
 bash tools/motion_check.sh /abs/page.html /abs/scratch 1440,900
 ```
 
-It captures two frames three seconds apart and prints the changed-pixel fraction and the bounding box of change. Expect a small fraction confined to the regions that are meant to move. A large or page-wide fraction means the overlay or a layout property is animating; zero means the loops are not running. Then open the later frame and walk the tells again; a loop extreme must still compose.
+It captures two frames three seconds apart and prints the changed-pixel fraction and the bounding box of change. Compare change with the intended regions. Zero in a short interval may mean a slow or event-triggered motion; it does not establish a failure. Check start/end, extremes, trigger states and reduced motion separately. Then open the later frame and walk the tells again; a loop extreme must still compose.

@@ -1,98 +1,69 @@
-# KCL assets
+# KCL materials and production routing
 
-The idiom lives on reduced subjects, so asset production is a stage of its own. Every asset follows one pipeline, whatever its origin:
+Use for every missing visual element, not only the central figure. Start with existing accepted assets. Generating something new must address a concrete missing role or quality gap, not a habit of using the tool.
 
-```
-source  →  inspect  →  cutout  →  crop / trim  →  tone  →  reduce to levels  →  place  →  record
-```
+## 1. Asset plan
 
-Sources are four: user-supplied (A), generated (B), public domain (C) and procedural (D). Record every asset's origin and license in the brief table (GOV-4). Never store third-party artwork, including the references that taught the grammar, in this skill.
+For each necessary item record: role and meaning; method and reason; reference/Style Bible; target box and display size; source/prompt; color/edge policy; layer and mask; independent motion; output file; status. A compact table in the brief is enough.
 
-## 1. Source
-
-### A · User-supplied
-
-Photographs, scans, drawings. Ask for the highest resolution available and whether the subject may be cropped, mirrored or rotated. A plain background makes the cutout trivial; a busy background needs a crop first and sometimes a manual mask from the user's editor.
-
-### B · Generated
-
-Generate the subject already in the idiom's terms so reduction is clean. KCL names no image tool: use whichever generation tool or skill the current session and team provide, with its own invocation and credentials. If that tool can output a transparent background, request it and still run the cutout stage to harden the edge; if it cannot, request a pure white background. Generation is an asset task; it does not reopen the composition or require a new UI approval.
-
-Prompt skeleton, one subject per image:
-
-> `<technique>` of `<subject>`, `<style period>`, isolated on a pure white background, hard edges, no shading gradients, no color, no text, no frame, centered, the whole subject visible with margin.
-
-| Register | Technique and style | Subjects that reduce well |
+| Visual task | Preferred route | Keep exact outside the image |
 | --- | --- | --- |
-| Classical | copperplate engraving, 18th–19th century; marble photogravure; architectural elevation drawing | busts, full statues, Doric/Ionic columns, friezes, arches, cathedral facades |
-| Natural | botanical plate, ornithological plate, woodcut, high-contrast silhouette | single birds in flight, deer, antlers, branches, mountain ridges, wave crests |
-| Technical | diagram in black ink, instrument illustration from a catalogue, type specimen | astrolabes, sextants, orreries, compasses, gears, lettering |
-| Human | archival portrait photograph, hands in studio light on black | hands, profiles, draped figures |
+| Main character, bird, hand, botanical/anatomical plate | Supplied art first; otherwise generate or source a suitable drawing | Identity constraints, labels, layout |
+| Engraved rosette, filigree, ceremonial border, decorative celestial assembly | Generate/source as a coherent assembly when internal craft matters; reuse detailed vector art if supplied | Attachment points, precise circles, editable labels |
+| Astrolabe/orrery/instrument housing | Generate/source the drawn object; combine with vector overlay | Tick count, angles, coordinates, numeric values |
+| Ink bleed, torn edge, brush gesture, paper fibres, material patch | Generate/source or use a proven texture asset; procedural is fine if it already achieves the intended effect | Crop/reveal masks, clipping, motion bounds |
+| Simple rings, grids, chart lines, exact moon phases, registration marks | SVG/Canvas/CSS or an existing vector | These are already the exact layer |
+| Title, prose, captions, navigation, real logos | Live DOM/SVG text or supplied approved vector | Spelling, glyphs, selection, controls |
 
-Settings, expressed in the tool's own terms: square or the subject's natural ratio; the tool's higher resolution tier when the asset will exceed 40% of the stage; for Duotone's one full-tonal subject ask for "soft studio light, deep blacks, full grayscale" instead of "no shading". Generate one subject at a time; a group never isolates cleanly.
+Judge **visual responsibility**, not file format. A simple four-point mark can be vector; a large finely engraved emblem may need an image. A small background asset can still be craft-critical. Do not add detail to a deliberately simple mark.
 
-Inspect each output before using it: whole subject present, no text or frame, background truly plain, no color cast that threshold would read as tone. Regenerate rather than repair a bad one.
+## 2. Generate/source a usable asset
 
-### C · Public domain and open collections
+Use the available image tool and obey its capabilities. Do not invent tool names, credentials or output paths. Generate a representative material proof early when quality is uncertain, then reuse its relevant reference and style decisions for the remaining family. Maintain consistency in line density, viewpoint, shading, palette and print scale.
 
-| Collection | Strength for KCL |
-| --- | --- |
-| The Metropolitan Museum of Art Open Access (CC0) | sculpture, casts, engravings, friezes |
-| Rijksmuseum (public domain, high resolution) | prints, etchings, botanical and bird plates |
-| Smithsonian Open Access (CC0) | natural history, instruments, archival photography |
-| Cleveland Museum of Art Open Access (CC0) | sculpture, prints |
-| Art Institute of Chicago (CC0 subset) | prints, architecture drawings |
-| Biodiversity Heritage Library (mostly PD, check item) | birds, botanicals, anatomy plates |
-| NYPL Digital Collections (PD subset) | maps, architecture, archival photography |
-| Library of Congress free-to-use sets | archival photography, maps |
-| Wikimedia Commons (filter PD / CC0) | columns, cathedrals, statues, mountains |
-| NASA image libraries (PD, credit) | planets, instruments, topography |
+Prompt contract:
 
-Download into an empty scratch directory; keep the item URL and license line.
+> Create [one asset or coherent assembly] for [visual role/meaning]. Drawing: [line, hatching, shading, edge and period vocabulary from Style Bible]. Shape: [silhouette, gesture, facing, centre/attachment points and open areas]. Color/material: [preserved values and local surface]. View/light: [consistent projection and lighting]. Output: [ratio, intended placement size, transparent alpha when supported / specified flat background], full required edges with padding. Omit captions, exact scales, letters, watermarks and page/UI layout; those are separate layers. Match [reference's stated traits only].
 
-### D · Procedural
+Examples, adapt rather than copy:
 
-No raster at all. Columns, arches, ridges, flocks, contours, disks and halos come from `tools/compose.mjs` or hand-authored SVG, and a single CJK character or numeral at plane scale is a complete subject. This path never blocks and is often the strongest; all three shipped examples use it.
+- **Ornament:** a single asymmetrical engraved botanical crescent with a hollow inner opening, thin directional hatching and a few dense shadow knots; warm-black ink, no text; transparent background; designed to wrap behind a shoulder. Keep the opening clear for a vector arc.
+- **Instrument:** an original copperplate-style celestial instrument housing, frontal elevation, worn dark ink with preserved fine tonal hatching; no graduations or numerals; isolated on transparent background. Add verified ticks and live labels afterward.
+- **Print material:** one vermilion brush sweep with a dry broken edge and irregular pigment density; no symbolic shape, cast shadow or surrounding paper rectangle; transparent background if supported. Its silhouette follows the intended gesture.
 
-## 2. Cutout, crop, trim, tone
+Generate related ornament parts together when they should read as one drawing. Split only where placement, masking, recoloring or animation needs independence. Do not generate a whole finished page and then pretend it remains editable. Contact sheets are for selection; inspect and crop an individual asset before production.
 
-All in `tools/process_image.py`, in this order, with Pillow only. The output alpha is always hard-edged (MAT-3).
+When transparency is unavailable, choose a background compatible with the planned compositing. A white background is not alpha. Preserve holes and internal white pigment; do not globally key white from a white costume. Inspect edges on both light and dark test grounds. For difficult matting, use an appropriate editor/tool or a better source; do not silently apply destructive thresholding.
 
-| Step | Flag | When |
-| --- | --- | --- |
-| Rotate / mirror | `--rotate 90`, `--flip h` | reorient a profile, mirror a wing |
-| Crop | `--crop x,y,w,h` (px or %) | isolate one subject from a scene before cutout |
-| Cutout: flood | `--cutout flood --tol 40` | plain background touching the edges (generated images, scans) |
-| Cutout: color | `--cutout color --key "#ffffff" --tol 30` | plain background that also appears inside holes |
-| Cutout: luma | `--cutout luma --key dark --tol 70` | light subject on a dark studio background, or the reverse with `light` |
-| Clean the mask | `--despeckle 5 --erode 2 --keep-largest` | fringes, specks, floating islands |
-| Trim | `--trim --pad 24` | crop to the subject's box with transparent margin |
-| Tone | `--levels 30,220 --contrast 1.3 --gamma 0.9 --blur-pre 0.8` | push a muddy photo toward clean black and white before reduction |
-| Size | `--max 1600` | cap the long edge; the page never needs more |
+For external sources, verify the particular item's rights and record its item URL, licence and required attribution. A museum/collection name alone is not licence evidence. Do not put reference artwork into the skill repository.
 
-A generated engraving on white usually needs only `--cutout flood --trim --pad 24`. A photograph needs a crop, a luma or color cutout, `--keep-largest`, then levels and contrast. If the flood leaks through a thin gap, raise `--erode` or lower `--tol`; if it stops short, raise `--tol`.
+## 3. Preserve first; reduce deliberately
 
-## 3. Reduce to levels
-
-The same source produces its processing levels (MAT-2). Typical pairs:
+Keep the source unchanged and export a derivative. Fine engraving already has line and tone. Prefer the preserved version when processing erases the features that made it worth using.
 
 ```sh
-# level 1: solid silhouette, level 2: line ghost
-python3 -I tools/process_image.py src.png --cutout flood --trim --pad 24 --mode silhouette --knockout -o out/bust-silhouette.png
-python3 -I tools/process_image.py src.png --cutout flood --trim --pad 24 --mode line --thick 2 --knockout -o out/bust-line.png
-# level 1: threshold, level 2: halftone
-python3 -I tools/process_image.py src.png --cutout flood --trim --pad 24 --mode threshold --level 0.55 --knockout -o out/bust-threshold.png
-python3 -I tools/process_image.py src.png --cutout flood --trim --pad 24 --mode halftone --cell 5 --stagger --knockout -o out/bust-halftone.png
-# Duotone's one full-tonal subject
-python3 -I tools/process_image.py src.png --cutout luma --key dark --tol 60 --trim --mode duotone --ink "#000000" --paper "#ffffff" -o out/bust-gray.png
+# Preserve RGB and existing antialiased/translucent alpha; trim without tonal reduction.
+python3 -I tools/process_image.py source.png --mode preserve --trim --pad 24 -o assets/ornament.png
+# Explicit limited-ink treatment when the art direction calls for it.
+python3 -I tools/process_image.py source.png --mode halftone --cell 4 --stagger --knockout -o assets/detail-halftone.png
+# Deliberately hard cutout for a flat silhouette, not a default for every image.
+python3 -I tools/process_image.py source.png --mode silhouette --cutout flood --tol 30 --alpha hard --knockout -o assets/silhouette.png
 ```
 
-`--knockout` exports ink on transparent so the PNG composites with `multiply` on light grounds or `screen` plus `invert(1)` on dark grounds (MAT-6). Keep the same `--trim --pad` on both levels so they register when offset.
+The CLI keeps its historical `threshold` default for compatibility. **Always pass `--mode` in new work.** `preserve` skips grayscale/recoloring and rejects `--knockout`; crop, trim, resize and explicitly requested tonal adjustments still apply. `--alpha preserve` keeps existing fractional alpha when applying a cutout; `--alpha hard` intentionally binarizes it. Auto uses preserve for `--mode preserve`, hard for legacy reduction. These basic cutouts are not semantic hair matting.
 
-## 4. Place and verify
+Do not use `--keep-largest` or erosion indiscriminately on filigree, separated feathers or detached ink specks. They can delete legitimate parts. Match export size to the largest intended display size and device pixel ratio; about 2× display dimensions is a useful starting point for detailed raster material, not a guarantee or mandatory enlargement. Inspect actual pixels and file weight. Never upscale a tiny source and call it higher fidelity.
 
-Place both levels in the Subject layer with a 2–3% offset between them, size by the scale pair recorded in the brief (SKL-7), and screenshot. Check at the designed canvas that no midtone survived, the edge is hard, and the subject reads at the intended scale; `tools/audit_canvas.py` confirms the first of these.
+For halftone, determine the dot size **at display scale**, compare to the original, and inspect target and narrow layouts for moiré. A uniform screen across face, cloth, background and ornament does not reproduce engraved craft. Use etched/pencil/painted shading at source when that is the needed language.
 
-## 5. Record
+## 4. Place independently
 
-One row per asset in the brief: origin (A–D), source and license or generation tool and prompt, register, processing levels, output file. A generated image is a page asset with its prompt recorded; a processed public-domain image stays public domain with its item recorded.
+Use subject `levels` for versions of a subject; use `kind: "material"` for a supporting assembly, ink plane or surface. Preserve color with no `tint`. A tint filter uses alpha as the silhouette; applying it to an opaque white-backed image makes a solid rectangle. For monochrome ink on light paper, a deliberate multiply blend may preserve shading; for dark grounds use a proper transparent/reversed export. Inspect rather than assuming the blend works.
+
+Plan front/back relationships explicitly. A generated instrument can sit behind the character while its exact arc sits in front; split artwork into separate exports only if actual crossings need it. Do not manufacture integration with a full-height red offset duplicate.
+
+## 5. Inspect and record
+
+Inspect every asset at native/detail size and at placed size: coherent drawing, complete required silhouette, convincing local marks, no fake text, no unintended frame/background, appropriate perspective, edge quality and shared style. Then inspect the composite for competing detail and repeated textures. Request a targeted edit or regenerate a defective asset; do not repair a weak source by burying it under more geometry.
+
+If generation is unavailable, use accepted/sourceable material, simplify with a stated art-direction decision, or deliver a labelled prototype with missing assets listed. Do not claim a generated material exists or that a primitive substitute meets the original fidelity goal.
