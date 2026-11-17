@@ -4,6 +4,44 @@
 
 Fill the spec in the order of [principles.md](principles.md). Every number is a decision; a number you cannot defend in one sentence belongs to the sketch round, not the build.
 
+## Material modes and supporting assets
+
+Set `artDirection.mode` explicitly in new work: `hybrid` for preserved illustration/material assemblage, `reduced` for the historical limited-ink diagnostics. Missing mode remains reduced for compatibility; unknown values are rejected. The mode selects checks, not a filter: images are never automatically desaturated. The brief carries the Style Bible and production plan; optional `artDirection.concept`/`styleBible` text is descriptive metadata.
+
+```json
+{
+  "kcl": "spec-v2",
+  "artDirection": { "mode": "hybrid", "concept": "An observatory reclaimed by plants" },
+  "canvas": { "w": 1440, "h": 900 },
+  "color": { "paper": "#ece5d9", "ink": "#141414", "signal": "#687b8e" },
+  "elements": [
+    { "id": "engraved-housing", "kind": "material", "src": "assets/housing.png",
+      "box": { "x": 120, "y": 90, "w": 700, "h": 700 }, "fit": "contain", "layer": "plane" },
+    { "id": "observer", "kind": "subject", "render": "rendered",
+      "box": { "x": 600, "y": 80, "w": 600, "h": 800 },
+      "levels": [{ "src": "assets/observer.png", "mode": "rendered" }] }
+  ]
+}
+```
+
+This is an asset placement example, not an implemented artwork: the referenced assets must be supplied/produced and verified. A `material` is not an extra ranked character. It renders in the same Studio/CLI path as other elements, participates in inline export and can be moved/resized by its `box`.
+
+| Material field | Meaning |
+| --- | --- |
+| `src` | image path relative to spec/root; absent shows an explicit asset-pending placeholder |
+| `box` | finite `x y w h` in canvas pixels, positive width/height |
+| `layer` | default `plane`; any renderer layer from `ground`, `plane`, `typePlane`, `subject`, `system`, `fragment`, `signal`, `type`, `overlay` (`quiet` is a non-rendered guide) |
+| `fit` | `contain` (default), `cover` (clips to the box), `stretch` (intentional distortion) |
+| `align` | `[horizontal, vertical]`, each `0`, `0.5` or `1`; default centered |
+| `opacity`, `blend` | default `1` and `normal`; explicit blend such as `multiply` only when intended |
+| `clip` | id of a frame/container/boxed element, applied in canvas space outside asset rotation |
+| `rotate` | degrees around the image box centre |
+| `tint` | optional role token or CSS color, recolors alpha silhouette; omit to preserve image RGB |
+
+Use more than one material element to represent separate front/back parts. Use `layer` to change depth and element order to order peers. An opaque white-backed raster with `tint` becomes a rectangle; use real alpha or an appropriate compositing export. Exact scales and text remain vector/DOM.
+
+Hybrid checks retain pending-material, duplicate-ID, clip-reference and field validation while skipping historical style quotas. `sketch.mjs` keeps descriptive geometry, flow and chosen whitespace-target checks. Coverage numbers remain available but are not judged by reduced-mode limits. The legacy tables below document reduced diagnostics only; they do not demand echoes, lines, filled planes, a soft element or extra texture.
+
 ## Shape
 
 ```json
@@ -11,7 +49,8 @@ Fill the spec in the order of [principles.md](principles.md). Every number is a 
   "kcl": "spec-v2",
   "title": "…",
   "page": "…html",
-  "archetype": "Scroll Bands | Icon Center | Asymmetric Grid",
+  "archetype": "chosen structure or custom",
+  "artDirection": { "mode": "hybrid | reduced" },
   "axis": 27,
   "canvas": { "w": 1440, "h": 900, "bands": [{ "id": "I", "y": 0, "h": 900, "label": "…" }] },
   "imagery": { "tension": "…", "subjectRegister": "…", "apparatus": "…", "motifs": [], "fragments": [], "voice": [] },
@@ -45,7 +84,8 @@ One flat list. Each element has a `kind`; the renderer sorts them into the layer
 | `bar` | plane | `x y w h` | solid ink bar (SKL-4) |
 | `block` | plane | `x y w h label` | ink plane, lighter |
 | `frame` | plane | `x y w h` | outline frame |
-| `container` | plane | `shape: circle` + `cx cy r`, or `square|arch` + `x y w h`, `label` | the one container (SKL-5) |
+| `container` | plane | `shape: circle` + `cx cy r`, or `square|arch` + `x y w h`, `label` | a container (SKL-5) |
+| `material` | plane | `src box fit align opacity blend clip rotate tint layer` | preserved supporting image or explicit pending placeholder |
 | `subject` | subject | `id label rank levels[] box{x y w h} bleed[]` | hatched box (denser for rank 1), rank badge, levels, thick bleed edges; the box may extend past the canvas |
 | `lines` | system | `angle` (degrees rising to the right, or `axis` / `perp`) `count perp through[x,y] spread dash` | one diagonal family exiting the canvas, as `compose.mjs lines` (SKL-3, SKL-18) |
 | `line` | system | `x1 y1 x2 y2 extend dash`, or born from a centre: `radial: { at, from, to }` / `tangent: { r, at, len }` with `anchor` or `cx cy` (`at` in degrees or `axis` / `perp`) | one line, extended to the edges unless `extend: false`; a radius or a tangent of the plate's centre (SKL-18) |
@@ -56,7 +96,7 @@ One flat list. Each element has a `kind`; the renderer sorts them into the layer
 | `rhythm` | system | `path[[x,y],…] count ratio start reverse seed` | rhythm points stepping by ratio along the path (SKL-2) |
 | `trail` | fragment | `id label path[] count size[min,max] taper: away|toward|flat spread seed` | fragments along a path, shrinking in the taper direction (SKL-10) |
 | `mark` | signal | `shape: star|dot|cross|ring` `x y size`; star: `sharp` (waist, 0.1) `aspect` (1.3) `outline: weight` `inner: 0.4` `innerInk` `satellites: [[dx, dy, scale]]` `rotate` `straight` | punctuation (SKL-8); a star is an astroid, outlined with a nested filled star and offset satellites when it is the plate's one star cluster |
-| `soft` | signal | `x y w h angle` | the single soft element, blurred (TEX-2) |
+| `soft` | signal | `x y w h angle` | an optional soft element, blurred (TEX-2) |
 | `rule` | signal | `x1 y1 x2 y2 width` | a signal-colored rule |
 | `field` | plane | `x y w h` or `cx cy r` or `shape: polygon|star` + `points`/`size`, `pattern: dots|halftone|hatch|grid|cross|rings|waves|tiles|stars|noise`, `cell angle density scale seed base outline` | a plane made of texture (SKL-16); `base` fills a solid color under the pattern, `outline` strokes the shape at that weight |
 | `sweep` | plane | `path[] width taper: start|end power` | a tapered brush arc; bulges in the middle by default, thick at `taper` end otherwise |
@@ -65,7 +105,7 @@ One flat list. Each element has a `kind`; the renderer sorts them into the layer
 | `system` | system | `cx cy rx ry tilt start end` (ellipse arc, anchorable) or `path[]` / `along` + `from to`, `count shape` (`phase star dot ring cross drop shard tick square tri image`) or `shapes[]`, `size sizes[min,max] grow: up|down|bulge|steps phases: true|half align rotate jitter guide guideDash` | an ordered system (SKL-17): one shape on one large path, even spacing, size by rule; `phases: true` runs the moon from new to full to new, `guide` draws the path at that weight |
 | `glyphs` | fragment | `path[]` or `along`, `count shapes[] size sizes[min,max] grow: start|end jitter align seed src` | a fragment alphabet cycling along a path: `phase star dot ring cross drop shard tri image` (SKL-10) |
 | `blob` | signal | `cx cy r rough points stretch angle seed blur opacity` | an organic ink or signal splotch, hard-edged unless `blur` |
-| `ribbon` | signal | `path[] width wobble blur opacity seed` | a brush stroke of varying width along a path; `blur` makes it the single soft element (TEX-2), otherwise hard |
+| `ribbon` | signal | `path[] width wobble blur opacity seed` | a brush stroke of varying width along a path; `blur` makes it an optional soft element (TEX-2), otherwise hard |
 | `tag` | type | `x y text size font tracking pad w h angle upper` | a label knocked out of a small ink box; `ink: bg` gives a paper box with ink text |
 | `grid` | system | `x y w h cols rows dash` | a coordinate grid (Technical register) |
 | `type` | type | `role: plane|mark|voice` `text` (string or lines) `box orientation: vertical` | dashed zone with a role badge; plane type ghosted at box size, mark as spaced caps, voice as lines (TYP-1) |
@@ -75,12 +115,12 @@ One flat list. Each element has a `kind`; the renderer sorts them into the layer
 
 v1 recorded where things are. v2 also records how heavy they are, what they are made of and what they are attached to, so that the final render is a function of the spec and the checks measure the render.
 
-**Every non-subject element** carries three material fields (defaults per kind are filled by the migration):
+**Every procedural non-subject element** carries three material fields (defaults per kind are filled by the migration):
 
 | field | values | meaning |
 | --- | --- | --- |
 | `weight` | `hairline` `line` `rule` `band` `bar` | the rung of SKL-14, drawn at 0.75 / 2 / 5 / 14 px at a 900px short side, scaled with the canvas; `bar` means a solid plane |
-| `fill` | `solid` `outline` `ghost` | solid ink, stroked at `weight`, or solid at 12% ink (the only partial opacity) |
+| `fill` | `solid` `outline` `ghost` | solid ink, stroked at `weight`, or solid at 12% ink (a conventional partial opacity) |
 | `ink` | `fg` `bg` `signal` `signal2` | which role token; `fg` is ink on a paper ground and paper on an ink ground (`color.ground`) |
 
 **Relations** replace hand-copied coordinates:
@@ -105,7 +145,7 @@ v1 recorded where things are. v2 also records how heavy they are, what they are 
   ] }
 ```
 
-`anatomy` is in normalized asset coordinates (0–1); `plate.mjs anatomy asset.png` computes `bbox`, `centroid`, `top`, `axisDeg` and five horizontal mass bands from the alpha or luma mask, and the landmarks are read off the asset by eye (or clicked in the Studio later). Levels draw in order; each has `src`, `mode` (threshold, dither, halftone, line, silhouette, negative, rendered, ghost), optional `offset`, `opacity`, `tint` (role token, recolors the ink), `blend`, `clip`, and its own placement: `box`, `fit`, `align` (a level placed elsewhere than the subject box), `scale`, `rotate` and `mirror` about the level's centre. An echo of the subject is a second `subject` element with `rank` ≥ 2 and one reduced level, often `tint: bg` inside a solid plane or `mirror: true` beside the original (SKL-16). A subject without `src` renders as a hatched placeholder so mass can be judged before assets exist. `render: "rendered"` invokes MAT-7 and its checks.
+`anatomy` is in normalized asset coordinates (0–1); `plate.mjs anatomy asset.png` computes `bbox`, `centroid`, `top`, `axisDeg` and five horizontal mass bands from the alpha or luma mask, and the landmarks are read off the asset by eye (or clicked in the Studio later). Levels draw in order; each has `src`, `mode` (threshold, dither, halftone, line, silhouette, negative, rendered, ghost), optional `offset`, `opacity`, `tint` (role token, recolors the ink), `blend`, `clip`, and its own placement: `box`, `fit`, `align` (a level placed elsewhere than the subject box), `scale`, `rotate` and `mirror` about the level's centre. An optional echo of the subject is a second `subject` element with `rank` ≥ 2 and one reduced level, often `tint: bg` inside a solid plane or `mirror: true` beside the original (SKL-16). A subject without `src` renders as a hatched placeholder so mass can be judged before assets exist. `render: "rendered"` preserves a subject; a single level is valid in hybrid. Historical MAT-7 quota warnings are limited to reduced diagnostics.
 
 **Type** gains `size`, `lineHeight`, `tracking`, `align`, `stretch: [sx, sy]`, `font` (role), `fill: outline`, and for vertical plane type `vertical: stack | rotate | rotate-ccw` (CJK stacks upright by default, Latin rotates).
 
@@ -135,7 +175,7 @@ node tools/sketch.mjs overlay docs/page.kcl-spec.json scratch/page-1440.png -o s
 
 The SVG is the sketch; the PNG is what you show and what you look at. Size the viewport to the SVG's `width`/`height` or larger; Chromium renders the SVG file directly.
 
-## Check
+## Check (legacy reduced diagnostics below)
 
 Two checks, both diagnostics, never verdicts. `plate.mjs check` reads the spec's structure; `plate.mjs measure` reads the rendered pixels; `sketch.mjs check` reads the geometry boxes (kept for the sketch round).
 
@@ -165,7 +205,7 @@ Two checks, both diagnostics, never verdicts. `plate.mjs check` reads the spec's
 | `overflowOk` | closers (bars, frames, container) crossed decisively by some element | none crossed (SKL-6) |
 | `softCount`, `marks`, voice per band | budgets | soft ≠ 1 (TEX-2); marks outside 3–7 (SKL-8); voice > 2 per band (TYP-5) |
 
-A warning is a question for the sketch round. Answer it in the spec or record the deviation in the brief (GOV-3); never silence it by moving a number that the composition needs.
+A warning is a question for review, never an instruction to fill a visual quota. Answer it in the spec or record the deviation in the brief (GOV-3); never silence it by moving a number that the composition needs.
 
 ## From spec to build
 

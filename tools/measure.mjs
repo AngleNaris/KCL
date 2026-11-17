@@ -61,10 +61,11 @@ export function measure(shots, spec, pal, opts = {}) {
 // Turn the numbers into the review language (review.md tells). Thresholds are deliberately plain.
 export function judge(m, structure = {}) {
   const warn = [];
+  if (structure.mode === 'hybrid') return [...(structure.warnings || [])];
   if (m.coverage.paper < 0.3) warn.push(`VER-6 留白只剩 ${Math.round(m.coverage.paper * 100)}%（目标 ≥ 30%）`);
-  if (m.coverage.paper > 0.72) warn.push(`VER-6/SKL-16 画面 ${Math.round(m.coverage.paper * 100)}% 是空纸（参照作品 50–70%）：加纹理面、主体回声、刻度与标签，或放大主体`);
+  if (m.coverage.paper > 0.72) warn.push(`VER-6/SKL-16 画面 ${Math.round(m.coverage.paper * 100)}% 是空纸（参照作品 50–70%）：核对是否符合留白意图；不要为覆盖率添加装饰`);
   if (m.densest < 0.4) warn.push(`VER-6/SKL-12 最密的格只有 ${Math.round(m.densest * 100)}% 墨（参照作品 45–85%）：没有一个地方真正密`);
-  if (m.grid.filter((g) => g < 0.08).length > 3) warn.push(`VER-6/SKL-16 九格里有 ${m.grid.filter((g) => g < 0.08).length} 格几乎空白：空区最多两格`);
+  if (m.grid.filter((g) => g < 0.08).length > 3) warn.push(`VER-6/SKL-16 九格里有 ${m.grid.filter((g) => g < 0.08).length} 格几乎空白：核对负形与配重，不以空格数判断完成度`);
   if (m.emptiest > 0.28) warn.push(`VER-6 最空的格也有 ${Math.round(m.emptiest * 100)}% 墨（参照作品 7–28%）：缺一个真正的空区`);
   if (m.coverage.signal < 0.001) warn.push(`COL-6 信号色只占 ${(m.coverage.signal * 100).toFixed(2)}%：看不见`);
   if (m.coverage.signal > 0.08) warn.push(`COL-6 信号色占 ${(m.coverage.signal * 100).toFixed(1)}%：不再是信号`);

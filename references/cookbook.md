@@ -1,5 +1,7 @@
 # KCL cookbook
 
+Optional implementation recipes, mainly for reduced-mode geometry. Apply the selected mode and material routing first; this file is not an element checklist. Use `kind: "material"` or positioned images for generated/sourced supporting artwork, keep live text and exact geometry separate.
+
 Web recipes for each layer. Everything here is plain HTML, CSS and SVG; no build step is required for a single page. Preprocess photographs with `tools/process_image.py`; generate procedural System layers with `tools/compose.mjs` or adapt the inline snippets.
 
 ## Tokens and layer stack (COL-1, SKL-1)
@@ -114,7 +116,7 @@ Export reduced subjects from the tool as ink-on-transparent PNG and composite wi
 .stage.dark .subject { mix-blend-mode: screen; filter: invert(1); } /* paper-colored ink on dark ground */
 ```
 
-Two processing levels of the same subject (MAT-2): place the line version offset by 2–3% of the stage behind the silhouette version.
+Optional two-level treatment (MAT-2), only when the visual concept benefits: compare against the preserved source and avoid an unintended offset duplicate. One preserved level is valid; use a meaningful crop/scale/clip when an echo is needed.
 
 ```html
 <img class="subject ghost" src="statue-line.png" style="left:46%; top:22%; width:34%">
@@ -144,7 +146,7 @@ Runtime reduction, only for small elements (MAT-4):
 
 Negative: `filter: invert(1)`. Posterize to three levels: `tableValues="0 0.5 1"` with `type="discrete"`.
 
-## Chromatic split, the one soft element (TEX-2, TEX-3)
+## Optional chromatic split (TEX-2, TEX-3)
 
 ```html
 <div class="split">

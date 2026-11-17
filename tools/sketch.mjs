@@ -10,7 +10,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { starPath } from './kcl-render.mjs';
+import { starPath, compositionMode } from './kcl-render.mjs';
 
 const [, , cmd, ...rest] = process.argv;
 const args = {}; const positional = [];
@@ -101,7 +101,7 @@ const boxOf = (el) => el.box || (el.r !== undefined ? { x: el.cx - el.r, y: el.c
 const LAYER_ORDER = ['plane', 'subject', 'system', 'fragment', 'signal', 'type', 'quiet'];
 function layerOf(el) {
   if (el.layer) return el.layer;
-  return ({ bar: 'plane', block: 'plane', frame: 'plane', container: 'plane', subject: 'subject', lines: 'system', line: 'system', horizon: 'system', rings: 'system', radial: 'system', orbit: 'system', rhythm: 'system', trail: 'fragment', mark: 'signal', soft: 'signal', rule: 'signal', type: 'type', quiet: 'quiet' })[el.kind] || 'system';
+  return ({ material: 'plane', bar: 'plane', block: 'plane', frame: 'plane', container: 'plane', subject: 'subject', lines: 'system', line: 'system', horizon: 'system', rings: 'system', radial: 'system', orbit: 'system', rhythm: 'system', trail: 'fragment', mark: 'signal', soft: 'signal', rule: 'signal', type: 'type', quiet: 'quiet' })[el.kind] || 'system';
 }
 
 function renderCanvas(spec, opt = {}) {
@@ -126,6 +126,8 @@ function renderCanvas(spec, opt = {}) {
       if (el.shape === 'circle' || el.r !== undefined) out.push(`<circle cx="${f(el.cx)}" cy="${f(el.cy)}" r="${f(el.r)}" fill="none" stroke="${C.ink}" stroke-width="2"/>${label(el.cx - el.r + 10, el.cy - el.r + 22, el.label || '容器', 12)}`);
       else if (el.shape === 'arch') out.push(`<path d="M${f(el.x)},${f(el.y + el.h)} V${f(el.y + el.w / 2)} A${f(el.w / 2)},${f(el.w / 2)} 0 0 1 ${f(el.x + el.w)},${f(el.y + el.w / 2)} V${f(el.y + el.h)}" fill="none" stroke="${C.ink}" stroke-width="2"/>${label(el.x + 10, el.y + el.h - 10, el.label || '容器', 12)}`);
       else out.push(`<rect x="${f(el.x)}" y="${f(el.y)}" width="${f(el.w)}" height="${f(el.h)}" fill="none" stroke="${C.ink}" stroke-width="2"/>${label(el.x + 10, el.y + 22, el.label || '容器', 12)}`);
+    } else if (k === 'material') {
+      const b = el.box; out.push(`<rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" fill="none" stroke="${C.ink}" stroke-dasharray="8 5"/>${label(b.x + 8, b.y + 20, el.label || el.id || 'material', 12)}`);
     } else if (k === 'subject') {
       const b = el.box, rank = el.rank || 1, pat = `url(#${id}-hatch${Math.min(rank, 3)})`;
       const body = `<rect x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}" fill="${wire ? 'none' : pat}" stroke="${C.ink}" stroke-width="${rank === 1 ? 2 : 1.2}"/>`;
@@ -242,13 +244,13 @@ ${defs(id, W, H, 0)}
 
 // ---------- check: diagnostics against the recorded principles ----------
 function check(spec) {
-  const { w: W, h: H } = spec.canvas; const els = spec.elements; const warn = [];
+  const { w: W, h: H } = spec.canvas; const els = spec.elements; const warn = []; const mode = compositionMode(spec); const reduced = mode === 'reduced';
   const subjects = els.filter((e) => e.kind === 'subject');
   const bands = spec.canvas.bands && spec.canvas.bands.length ? spec.canvas.bands : [{ id: 'stage', y: 0, h: H }];
   // Coverage on a coarse raster: subjects, bars, blocks, type boxes, soft element.
   const G = 4, cols = Math.ceil(W / G), rows = Math.ceil(H / G); const grid = new Uint8Array(cols * rows);
   const fill = (b) => { const x0 = Math.max(0, Math.floor(b.x / G)), y0 = Math.max(0, Math.floor(b.y / G)), x1 = Math.min(cols, Math.ceil((b.x + b.w) / G)), y1 = Math.min(rows, Math.ceil((b.y + b.h) / G)); for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) grid[y * cols + x] = 1; };
-  for (const e of els) { if (e.kind === 'subject' || e.kind === 'type') fill(e.box); else if (e.kind === 'bar' || e.kind === 'block' || e.kind === 'soft') fill(e); }
+  for (const e of els) { if (e.kind === 'subject' || e.kind === 'material' || e.kind === 'type') fill(e.box); else if (e.kind === 'bar' || e.kind === 'block' || e.kind === 'soft') fill(e); }
   let covered = 0; for (const v of grid) covered += v; const whitespace = f(1 - covered / grid.length);
   const target = spec.principles?.whitespace?.target; if (target !== undefined && Math.abs(whitespace - target) > 0.12) warn.push(`留白估算 ${whitespace} 偏离目标 ${target}`);
   // Scale pair: largest subject long side vs smallest meaningful mark/fragment/rhythm point.
@@ -256,13 +258,13 @@ function check(spec) {
   const smalls = [];
   for (const e of els) { if (e.kind === 'mark') smalls.push(e.size || 16); if (e.kind === 'trail') smalls.push((e.size || [6, 24])[0]); if (e.kind === 'rhythm') smalls.push((e.start || 4) * 2); }
   const smallest = smalls.length ? Math.min(...smalls) : null; const scaleRatio = smallest ? f(largest / smallest) : null;
-  if (!subjects.length) warn.push('没有主体'); if (scaleRatio !== null && scaleRatio < 12) warn.push(`尺度差 1:${scaleRatio} 小于 1:12`);
+  if (!subjects.length && reduced) warn.push('没有主体'); if (reduced && scaleRatio !== null && scaleRatio < 12) warn.push(`尺度差 1:${scaleRatio} 小于 1:12`);
   // Flow reaches the ranked subjects; apparatus passes through the first subject.
   const flow = spec.flow; let flowHits = []; let flowLength = 0;
   if (flow && flow.path) {
     const pts = sampleSmooth([flow.entry, ...flow.path, flow.exit].filter(Boolean)); flowLength = f(polyLength(pts) / Math.hypot(W, H));
     for (const s of subjects.filter((s) => (s.rank || 1) <= 2)) { const b = s.box; const hit = pts.some(([x, y]) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); flowHits.push({ id: s.id || s.label, hit }); if (!hit) warn.push(`动线未经过主体 ${s.id || s.label}`); }
-    if (flowLength < 0.8) warn.push(`动线过短 (${flowLength} 对角线)`);
+    if (reduced && flowLength < 0.8) warn.push(`动线过短 (${flowLength} 对角线)`);
   } else warn.push('没有动线');
   const first = subjects.find((s) => (s.rank || 1) === 1) || subjects[0]; let interweave = 0;
   if (first) {
@@ -274,25 +276,25 @@ function check(spec) {
       if (e.kind === 'container' && e.r !== undefined && circleRect(e.cx, e.cy, e.r, first.box)) interweave++;
       if ((e.kind === 'bar' || e.kind === 'block') && segRect(e.x, e.y + e.h / 2, e.x + e.w, e.y + e.h / 2, first.box)) interweave++;
     }
-    if (interweave < 2) warn.push(`装置穿过主体 ${first.id || first.label} 仅 ${interweave} 处`);
+    if (reduced && interweave < 2) warn.push(`装置穿过主体 ${first.id || first.label} 仅 ${interweave} 处`);
   }
   // Density: element centres over a 3×3 grid.
   const cells = new Array(9).fill(0); let n = 0;
   const centre = (e) => { if (e.box) return [e.box.x + e.box.w / 2, e.box.y + e.box.h / 2]; if (e.x !== undefined && e.w !== undefined) return [e.x + e.w / 2, e.y + e.h / 2]; if (e.x !== undefined) return [e.x, e.y]; if (e.cx !== undefined) return [e.cx, e.cy]; return null; };
   for (const e of els) { if (e.kind === 'trail' && e.path) { for (let i = 0; i < (e.count || 8); i++) { const [x, y] = alongPoly(e.path, (i + 0.5) / (e.count || 8)); cells[Math.min(2, Math.max(0, Math.floor(y / H * 3))) * 3 + Math.min(2, Math.max(0, Math.floor(x / W * 3)))]++; n++; } continue; } const c = centre(e); if (!c) continue; cells[Math.min(2, Math.max(0, Math.floor(c[1] / H * 3))) * 3 + Math.min(2, Math.max(0, Math.floor(c[0] / W * 3)))]++; n++; }
   const densest = n ? f(Math.max(...cells) / n) : 0, emptyCells = cells.filter((c) => c === 0).length;
-  if (n >= 6 && densest < 0.3) warn.push(`疏密不足：最密格仅占 ${densest}`); if (n >= 6 && emptyCells === 0) warn.push('没有空格：九宫无一空');
+  if (reduced && n >= 6 && densest < 0.3) warn.push(`疏密不足：最密格仅占 ${densest}`); if (reduced && n >= 6 && emptyCells === 0) warn.push('没有空格：九宫无一空');
   // Overflow per bar/frame/container; budgets.
   const closers = els.filter((e) => e.kind === 'bar' || e.kind === 'frame' || e.kind === 'container');
   const crossers = els.filter((e) => e.kind === 'subject' || e.kind === 'soft' || e.kind === 'type' || e.kind === 'block');
   let overflowOk = 0;
   for (const c of closers) { const cb = boxOf(c); const ok = crossers.some((e) => { const b = boxOf(e); const ix = Math.max(0, Math.min(b.x + b.w, cb.x + cb.w) - Math.max(b.x, cb.x)), iy = Math.max(0, Math.min(b.y + b.h, cb.y + cb.h) - Math.max(b.y, cb.y)); const inside = ix * iy / (b.w * b.h); return inside > 0 && inside < 0.8 && (c.kind !== 'bar' || iy > 0); }); if (ok) overflowOk++; }
-  if (closers.length && overflowOk === 0) warn.push('没有元素决定性地越过任何分隔面、框或容器');
-  const softCount = els.filter((e) => e.kind === 'soft').length; if (softCount !== 1) warn.push(`软元素 ${softCount} 个，应为 1`);
-  for (const b of bands) { const v = els.filter((e) => e.kind === 'type' && (e.role || 'voice') === 'voice' && e.box.y >= b.y && e.box.y < b.y + b.h).length; if (v > 2) warn.push(`band ${b.id} 声部句 ${v} 条，超过 2`); }
-  const marks = els.filter((e) => e.kind === 'mark').length; if (marks && (marks < 3 || marks > 7)) warn.push(`标点 ${marks} 个，默认 3–7`);
+  if (reduced && closers.length && overflowOk === 0) warn.push('没有元素决定性地越过任何分隔面、框或容器');
+  const softCount = els.filter((e) => e.kind === 'soft').length; if (reduced && softCount !== 1) warn.push(`软元素 ${softCount} 个，应为 1`);
+  for (const b of bands) { const v = els.filter((e) => e.kind === 'type' && (e.role || 'voice') === 'voice' && e.box.y >= b.y && e.box.y < b.y + b.h).length; if (reduced && v > 2) warn.push(`band ${b.id} 声部句 ${v} 条，超过 2`); }
+  const marks = els.filter((e) => e.kind === 'mark').length; if (reduced && marks && (marks < 3 || marks > 7)) warn.push(`标点 ${marks} 个，默认 3–7`);
   const fragments = els.filter((e) => e.kind === 'trail').reduce((a, e) => a + (e.count || 8), 0);
-  return { whitespace, scaleRatio, largest: f(largest), smallest, flowLength, flowHits, interweave, densest, emptyCells, overflowOk, closers: closers.length, softCount, marks, fragments, subjects: subjects.length, warnings: warn };
+  return { mode, whitespace, scaleRatio, largest: f(largest), smallest, flowLength, flowHits, interweave, densest, emptyCells, overflowOk, closers: closers.length, softCount, marks, fragments, subjects: subjects.length, warnings: warn };
 }
 
 // ---------- main ----------
